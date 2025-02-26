@@ -1,37 +1,4 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -42,10 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+/* eslint-disable @typescript-eslint/no-require-imports */
 const grammy_1 = require("grammy");
 const exercises_1 = require("./src/exercises");
-const dotenv = __importStar(require("dotenv"));
-dotenv.config();
+require('dotenv').config();
 const bot = new grammy_1.Bot(process.env.BOT_TOKEN);
 const userSessions = {};
 bot.command("start", (ctx) => __awaiter(void 0, void 0, void 0, function* () {
@@ -58,7 +25,7 @@ bot.command("start", (ctx) => __awaiter(void 0, void 0, void 0, function* () {
             isInRestMessage: false
         };
     }
-    yield ctx.reply("Welcome to the Training Program! Press 'Start Session' to begin.", {
+    yield ctx.reply("Welcome! Press 'Start Session' to begin.", {
         reply_markup: {
             inline_keyboard: [[{ text: "Start Session", callback_data: "start_session" }]]
         }
@@ -84,7 +51,7 @@ bot.callbackQuery("start_session", (ctx) => __awaiter(void 0, void 0, void 0, fu
         return;
     session.exerciseIndex = 0;
     session.startTime = Date.now();
-    session.isInRestMessage = false; // Initialize the rest message state
+    session.isInRestMessage = false;
     yield sendExercise(ctx, session);
 }));
 bot.callbackQuery("next_exercise", (ctx) => __awaiter(void 0, void 0, void 0, function* () {
@@ -95,20 +62,16 @@ bot.callbackQuery("next_exercise", (ctx) => __awaiter(void 0, void 0, void 0, fu
         return;
     const currentExercise = exercises_1.exercises[session.exerciseIndex];
     if (currentExercise.hasRest && session.isInRestMessage) {
-        // If the user is in the rest message state, start the rest period
         yield handleRestPeriod(ctx, session);
         return;
     }
-    // Move to the next exercise
     session.exerciseIndex++;
     if (session.exerciseIndex < exercises_1.exercises.length) {
         const nextExercise = exercises_1.exercises[session.exerciseIndex];
         if (nextExercise.hasRest) {
-            // Mark the session as in rest message state
             session.isInRestMessage = true;
         }
         else {
-            // Reset the rest message state
             session.isInRestMessage = false;
         }
         yield sendExercise(ctx, session);
@@ -121,30 +84,26 @@ bot.callbackQuery("next_exercise", (ctx) => __awaiter(void 0, void 0, void 0, fu
 function sendExercise(ctx, session) {
     return __awaiter(this, void 0, void 0, function* () {
         const exercise = exercises_1.exercises[session.exerciseIndex];
-        // Construct the caption dynamically
         let caption = `${exercise.name}`;
         if (exercise.description) {
             caption += `\n\n${exercise.description}`;
         }
         caption += `\nReps: ${exercise.repsMin}-${exercise.repsMax}`;
         if (exercise.imgUrl) {
-            // Use `replyWithPhoto` to send the local photo
             yield ctx.replyWithPhoto({ source: `./photos/${exercise.imgUrl}` }, {
                 caption: caption,
                 reply_markup: {
-                    inline_keyboard: [[{ text: "Next", callback_data: "next_exercise" }]],
-                },
+                    inline_keyboard: [[{ text: "Next", callback_data: "next_exercise" }]]
+                }
             });
         }
         else {
-            // If no photo exists, send only the text message
             yield ctx.reply(caption, {
                 reply_markup: {
-                    inline_keyboard: [[{ text: "Next", callback_data: "next_exercise" }]],
-                },
+                    inline_keyboard: [[{ text: "Next", callback_data: "next_exercise" }]]
+                }
             });
         }
-        // Reset the rest message state if needed
         if (!exercise.hasRest) {
             session.isInRestMessage = false;
         }
@@ -154,21 +113,15 @@ function sendExercise(ctx, session) {
 function handleRestPeriod(ctx, session) {
     return __awaiter(this, void 0, void 0, function* () {
         if (session.restTimer) {
-            // If a rest timer is already running, ignore the "Next" button click
             yield ctx.reply("Please wait until the rest period ends.");
             return;
         }
-        // Send the "Rest" message
         yield ctx.reply("Rest for 1.5 minutes before continuing...");
-        // Start the rest period countdown
         session.restTimer = setTimeout(() => __awaiter(this, void 0, void 0, function* () {
             try {
-                // Clear the rest timer
                 clearTimeout(session.restTimer);
                 delete session.restTimer;
-                // Reset the rest message state
                 session.isInRestMessage = false;
-                // Proceed to the next exercise
                 session.exerciseIndex++;
                 if (session.exerciseIndex < exercises_1.exercises.length) {
                     yield sendExercise(ctx, session);
@@ -180,14 +133,14 @@ function handleRestPeriod(ctx, session) {
             catch (error) {
                 console.error("Error during rest period:", error);
             }
-        }), 90); // 90 seconds
+        }), 90); // TODO 90 seconds 
     });
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function endSession(ctx, session) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b;
-        const elapsedTime = ((Date.now() - session.startTime) / 1000 / 60).toFixed(2); // Time in minutes
+        const elapsedTime = ((Date.now() - session.startTime) / 1000 / 60).toFixed(2); // mins
         yield ctx.reply(`Training session completed!\n\nTotal time: ${elapsedTime} seconds`, {
             reply_markup: { remove_keyboard: true }
         });

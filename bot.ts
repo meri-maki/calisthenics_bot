@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { Bot } from "grammy"
 import { exercises } from "./src/exercises"
-import * as dotenv from "dotenv"
+require('dotenv').config()
 
-dotenv.config()
 
 const bot = new Bot(process.env.BOT_TOKEN!)
 
