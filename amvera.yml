@@ -1,11 +1,10 @@
 meta:
   environment: node
   toolchain:
-    name: npm
-    version: 18
+    name: browser
+    version: "18"
 build:
-  skip: 'yes'
-  command: node dist/bot.js
-run:
-  persistenceMount: /data
-  containerPort: 80
+  additionalCommands: npx tsc
+  artifacts:
+    build/*: /
+run: {}
