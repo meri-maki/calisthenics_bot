@@ -1,1 +1,143 @@
-*.env
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+
+# Compiled source #
+###################
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Packages #
+############
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Eclipse #
+###########
+.classpath
+.project
+.settings
+.idea/
+.metadata
+*.iml
+*.ipr
+proguard/
+
+# Logs and db #
+######################
+logs/*.log
+logs/*.db
+logs/screenshots/*.png
+logs/screenshots/*.jpg
+examples/*.log
+examples/*.json
+databases/*.db
+databases/*.sql
+databases/*.json
+*.log
+*.sql
+*.sqlite
+*.lock
+yarn-debug.log
+yarn-error.log
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Python #
+##########
+*.pyc
+*.pyo
+
+# KDE/Linux generated files #
+#############################
+.directory
+
+# Backup generated files #
+##########################
+*~
+*.swp
+*.bak
+*#
+
+# Android #
+###########
+*.apk
+*.ap_
+*.dex
+bin/
+gen/
+.gradle/
+build/
+local.properties
+
+# Vagrant #
+###########
+/.vagrant
+
+# PHP #
+#######
+./config.php
+phpunit.xml
+/vendor
+composer.phar
+/bower_components
+
+# Runtime data #
+################
+pids
+*.pid
+*.seed
+*.pid.lock
+*.eslintcache
+
+# NodeJS #
+##########
+npm-debug.log
+/node_modules
+/dist
+
+# Husky #
+/.husky/_/s
+
+# App #
+#######
+/dist
+/build
+/release
+/storage/tasks
+/storage/prices/*
+/certs
+/var/build_commit.txt
+.env
+
+
+.env.development.local
+.vite
+
+
