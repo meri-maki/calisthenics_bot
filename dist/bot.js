@@ -54,7 +54,8 @@ bot.command("start", (ctx) => __awaiter(void 0, void 0, void 0, function* () {
     if (!userSessions[userId]) {
         userSessions[userId] = {
             exerciseIndex: 0,
-            startTime: Date.now()
+            startTime: Date.now(),
+            isInRestMessage: false
         };
     }
     yield ctx.reply("Welcome to the Training Program! Press 'Start Session' to begin.", {
@@ -83,6 +84,7 @@ bot.callbackQuery("start_session", (ctx) => __awaiter(void 0, void 0, void 0, fu
         return;
     session.exerciseIndex = 0;
     session.startTime = Date.now();
+    session.isInRestMessage = false; // Initialize the rest message state
     yield sendExercise(ctx, session);
 }));
 bot.callbackQuery("next_exercise", (ctx) => __awaiter(void 0, void 0, void 0, function* () {
@@ -91,13 +93,23 @@ bot.callbackQuery("next_exercise", (ctx) => __awaiter(void 0, void 0, void 0, fu
     const session = userSessions[userId];
     if (!session)
         return;
+    const currentExercise = exercises_1.exercises[session.exerciseIndex];
+    if (currentExercise.hasRest && session.isInRestMessage) {
+        // If the user is in the rest message state, start the rest period
+        yield handleRestPeriod(ctx, session);
+        return;
+    }
+    // Move to the next exercise
     session.exerciseIndex++;
     if (session.exerciseIndex < exercises_1.exercises.length) {
-        const currentExercise = exercises_1.exercises[session.exerciseIndex];
-        if (currentExercise.hasRest && session.restTimer) {
-            // If a rest timer is already running, do nothing
-            yield ctx.reply("Please wait until the rest period ends.");
-            return;
+        const nextExercise = exercises_1.exercises[session.exerciseIndex];
+        if (nextExercise.hasRest) {
+            // Mark the session as in rest message state
+            session.isInRestMessage = true;
+        }
+        else {
+            // Reset the rest message state
+            session.isInRestMessage = false;
         }
         yield sendExercise(ctx, session);
     }
@@ -120,20 +132,21 @@ function sendExercise(ctx, session) {
             yield ctx.replyWithPhoto({ source: `./photos/${exercise.imgUrl}` }, {
                 caption: caption,
                 reply_markup: {
-                    inline_keyboard: [[{ text: "Next", callback_data: "next_exercise" }]]
-                }
+                    inline_keyboard: [[{ text: "Next", callback_data: "next_exercise" }]],
+                },
             });
         }
         else {
             // If no photo exists, send only the text message
-            yield ctx.reply(`${exercise.name}\n\n${exercise.description || ""}\nReps: ${exercise.repsMin}-${exercise.repsMax}`, {
+            yield ctx.reply(caption, {
                 reply_markup: {
-                    inline_keyboard: [[{ text: "Next", callback_data: "next_exercise" }]]
-                }
+                    inline_keyboard: [[{ text: "Next", callback_data: "next_exercise" }]],
+                },
             });
         }
-        if (exercise.hasRest) {
-            yield handleRestPeriod(ctx, session);
+        // Reset the rest message state if needed
+        if (!exercise.hasRest) {
+            session.isInRestMessage = false;
         }
     });
 }
@@ -142,18 +155,19 @@ function handleRestPeriod(ctx, session) {
     return __awaiter(this, void 0, void 0, function* () {
         if (session.restTimer) {
             // If a rest timer is already running, ignore the "Next" button click
+            yield ctx.reply("Please wait until the rest period ends.");
             return;
         }
+        // Send the "Rest" message
+        yield ctx.reply("Rest for 1.5 minutes before continuing...");
         // Start the rest period countdown
         session.restTimer = setTimeout(() => __awaiter(this, void 0, void 0, function* () {
             try {
-                // Send the "Rest" message
-                yield ctx.reply("Rest for 1.5 minutes before continuing...");
-                // Wait for 1.5 minutes
-                yield new Promise((resolve) => setTimeout(resolve, 90000)); // 90 seconds
                 // Clear the rest timer
                 clearTimeout(session.restTimer);
                 delete session.restTimer;
+                // Reset the rest message state
+                session.isInRestMessage = false;
                 // Proceed to the next exercise
                 session.exerciseIndex++;
                 if (session.exerciseIndex < exercises_1.exercises.length) {
@@ -166,7 +180,7 @@ function handleRestPeriod(ctx, session) {
             catch (error) {
                 console.error("Error during rest period:", error);
             }
-        }), 0); // Start the timer immediately
+        }), 90); // 90 seconds
     });
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
