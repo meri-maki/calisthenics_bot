@@ -91,45 +91,17 @@ bot.callbackQuery("next_exercise", (ctx) => __awaiter(void 0, void 0, void 0, fu
     const session = userSessions[userId];
     if (!session)
         return;
-    // Move to the next exercise
     session.exerciseIndex++;
     if (session.exerciseIndex < exercises_1.exercises.length) {
         const currentExercise = exercises_1.exercises[session.exerciseIndex];
-        if (currentExercise.hasRest) {
-            // If the exercise has a rest period, send the exercise details first
-            yield sendExercise(ctx, session);
-            // Then prepare for the rest period
-            session.restTimer = setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
-                try {
-                    // Send the rest message
-                    const restMessage = yield ctx.reply("Rest for 1.5 minutes before continuing...");
-                    session.restMessageId = restMessage.message_id;
-                    // Wait for 1.5 minutes
-                    yield new Promise((resolve) => setTimeout(resolve, 90000)); // 90 seconds
-                    // Clear the rest timer
-                    clearTimeout(session.restTimer);
-                    delete session.restTimer;
-                    // Proceed to the next exercise
-                    session.exerciseIndex++;
-                    if (session.exerciseIndex < exercises_1.exercises.length) {
-                        yield sendExercise(ctx, session);
-                    }
-                    else {
-                        yield endSession(ctx, session);
-                    }
-                }
-                catch (error) {
-                    console.error("Error during rest period:", error);
-                }
-            }), 0); // Start the timer immediately
+        if (currentExercise.hasRest && session.restTimer) {
+            // If a rest timer is already running, do nothing
+            yield ctx.reply("Please wait until the rest period ends.");
+            return;
         }
-        else {
-            // If the exercise does not have a rest period, send it directly
-            yield sendExercise(ctx, session);
-        }
+        yield sendExercise(ctx, session);
     }
     else {
-        // End the session if all exercises are completed
         yield endSession(ctx, session);
     }
 }));
@@ -143,49 +115,71 @@ function sendExercise(ctx, session) {
             caption += `\n\n${exercise.description}`;
         }
         caption += `\nReps: ${exercise.repsMin}-${exercise.repsMax}`;
-        let messageId;
         if (exercise.imgUrl) {
             // Use `replyWithPhoto` to send the local photo
-            const response = yield ctx.replyWithPhoto({ source: `./photos/${exercise.imgUrl}` }, {
+            yield ctx.replyWithPhoto({ source: `./photos/${exercise.imgUrl}` }, {
                 caption: caption,
                 reply_markup: {
                     inline_keyboard: [[{ text: "Next", callback_data: "next_exercise" }]]
                 }
             });
-            messageId = response.message_id;
         }
         else {
             // If no photo exists, send only the text message
-            const response = yield ctx.reply(caption, {
+            yield ctx.reply(`${exercise.name}\n\n${exercise.description || ""}\nReps: ${exercise.repsMin}-${exercise.repsMax}`, {
                 reply_markup: {
                     inline_keyboard: [[{ text: "Next", callback_data: "next_exercise" }]]
                 }
             });
-            messageId = response.message_id;
         }
-        // Store the last message ID
-        session.lastMessageId = messageId;
+        if (exercise.hasRest) {
+            yield handleRestPeriod(ctx, session);
+        }
+    });
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function handleRestPeriod(ctx, session) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (session.restTimer) {
+            // If a rest timer is already running, ignore the "Next" button click
+            return;
+        }
+        // Start the rest period countdown
+        session.restTimer = setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+            try {
+                // Send the "Rest" message
+                yield ctx.reply("Rest for 1.5 minutes before continuing...");
+                // Wait for 1.5 minutes
+                yield new Promise((resolve) => setTimeout(resolve, 90000)); // 90 seconds
+                // Clear the rest timer
+                clearTimeout(session.restTimer);
+                delete session.restTimer;
+                // Proceed to the next exercise
+                session.exerciseIndex++;
+                if (session.exerciseIndex < exercises_1.exercises.length) {
+                    yield sendExercise(ctx, session);
+                }
+                else {
+                    yield endSession(ctx, session);
+                }
+            }
+            catch (error) {
+                console.error("Error during rest period:", error);
+            }
+        }), 0); // Start the timer immediately
     });
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function endSession(ctx, session) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b;
-        const elapsedTime = ((Date.now() - session.startTime) / 1000).toFixed(2); // Time in seconds
-        // Delete the last message
-        if (session.lastMessageId) {
-            try {
-                yield ctx.deleteMessage(session.lastMessageId);
-            }
-            catch (error) {
-                console.error("Error deleting previous message:", error);
-            }
-        }
-        // Send the session completion message
+        const elapsedTime = ((Date.now() - session.startTime) / 1000 / 60).toFixed(2); // Time in minutes
         yield ctx.reply(`Training session completed!\n\nTotal time: ${elapsedTime} seconds`, {
             reply_markup: { remove_keyboard: true }
         });
-        // Clean up session data
         delete userSessions[((_b = (_a = ctx.from) === null || _a === void 0 ? void 0 : _a.id) === null || _b === void 0 ? void 0 : _b.toString()) || ""];
     });
 }
+// Start the bot
+bot.start();
+console.log("Bot started!");
