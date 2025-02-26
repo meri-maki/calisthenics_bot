@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /* eslint-disable @typescript-eslint/no-require-imports */
 const grammy_1 = require("grammy");
 const exercises_1 = require("./src/exercises");
-require('dotenv').config();
+require("dotenv").config();
 const bot = new grammy_1.Bot(process.env.BOT_TOKEN);
 const userSessions = {};
 bot.command("start", (ctx) => __awaiter(void 0, void 0, void 0, function* () {
@@ -32,15 +32,9 @@ bot.command("start", (ctx) => __awaiter(void 0, void 0, void 0, function* () {
     });
 }));
 bot.command("reset", (ctx) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d;
-    const userId = ((_b = (_a = ctx.from) === null || _a === void 0 ? void 0 : _a.id) === null || _b === void 0 ? void 0 : _b.toString()) || "";
-    if (userSessions[userId])
-        delete userSessions[((_d = (_c = ctx.from) === null || _c === void 0 ? void 0 : _c.id) === null || _d === void 0 ? void 0 : _d.toString()) || ""];
-    yield ctx.reply("See you next time!", {
-        reply_markup: {
-            inline_keyboard: [[{ text: "Start Session", callback_data: "start_session" }]]
-        }
-    });
+    var _a, _b;
+    delete userSessions[((_b = (_a = ctx.from) === null || _a === void 0 ? void 0 : _a.id) === null || _b === void 0 ? void 0 : _b.toString()) || ""];
+    yield ctx.reply("See you next time!");
 }));
 // Handle "Start Session" button
 bot.callbackQuery("start_session", (ctx) => __awaiter(void 0, void 0, void 0, function* () {
@@ -89,6 +83,9 @@ function sendExercise(ctx, session) {
             caption += `\n\n${exercise.description}`;
         }
         caption += `\nReps: ${exercise.repsMin}-${exercise.repsMax}`;
+        if (exercise.videoUrl) {
+            caption += `\n${exercise.videoUrl}`;
+        }
         if (exercise.imgUrl) {
             yield ctx.replyWithPhoto({ source: `./photos/${exercise.imgUrl}` }, {
                 caption: caption,
@@ -133,7 +130,7 @@ function handleRestPeriod(ctx, session) {
             catch (error) {
                 console.error("Error during rest period:", error);
             }
-        }), 90); // TODO 90 seconds 
+        }), 1000 * 9); // TODO 90 seconds
     });
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

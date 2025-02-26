@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { Bot } from "grammy"
 import { exercises } from "./src/exercises"
-require('dotenv').config()
-
+require("dotenv").config()
 
 const bot = new Bot(process.env.BOT_TOKEN!)
 
@@ -34,15 +33,9 @@ bot.command("start", async (ctx) => {
 })
 
 bot.command("reset", async (ctx) => {
-    const userId = ctx.from?.id?.toString() || ""
+    delete userSessions[ctx.from?.id?.toString() || ""]
 
-    if (userSessions[userId]) delete userSessions[ctx.from?.id?.toString() || ""]
-
-    await ctx.reply("See you next time!", {
-        reply_markup: {
-            inline_keyboard: [[{ text: "Start Session", callback_data: "start_session" }]]
-        }
-    })
+    await ctx.reply("See you next time!")
 })
 
 // Handle "Start Session" button
@@ -93,12 +86,15 @@ bot.callbackQuery("next_exercise", async (ctx) => {
 async function sendExercise(ctx: any, session: SessionData) {
     const exercise = exercises[session.exerciseIndex]
 
-
     let caption = `${exercise.name}`
     if (exercise.description) {
         caption += `\n\n${exercise.description}`
     }
     caption += `\nReps: ${exercise.repsMin}-${exercise.repsMax}`
+
+    if (exercise.videoUrl) {
+        caption += `\n${exercise.videoUrl}`
+    }
 
     if (exercise.imgUrl) {
         await ctx.replyWithPhoto(
@@ -137,7 +133,6 @@ async function handleRestPeriod(ctx: any, session: SessionData) {
             clearTimeout(session.restTimer)
             delete session.restTimer
 
-
             session.isInRestMessage = false
 
             session.exerciseIndex++
@@ -149,7 +144,7 @@ async function handleRestPeriod(ctx: any, session: SessionData) {
         } catch (error) {
             console.error("Error during rest period:", error)
         }
-    }, 90) // TODO 90 seconds 
+    }, 1000 * 9) // TODO 90 seconds
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

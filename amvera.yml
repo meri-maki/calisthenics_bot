@@ -1,10 +1,10 @@
 meta:
-  environment: node
-  toolchain:
-    name: browser
-    version: "18"
+    environment: node
+    toolchain:
+        name: browser
+        version: "18"
 build:
-  additionalCommands: npx tsc
-  artifacts:
-    build/*: /
+    additionalCommands: npx tsc
+    artifacts:
+        build/*: /
 run: {}
