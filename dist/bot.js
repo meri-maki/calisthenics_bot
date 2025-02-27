@@ -22,6 +22,7 @@ bot.command("start", (ctx) => __awaiter(void 0, void 0, void 0, function* () {
         userSessions[userId] = {
             exerciseIndex: 0,
             startTime: Date.now(),
+            lastActivityTime: Date.now(),
             isInRestMessage: false
         };
     }
@@ -45,6 +46,7 @@ bot.callbackQuery("start_session", (ctx) => __awaiter(void 0, void 0, void 0, fu
         return;
     session.exerciseIndex = 0;
     session.startTime = Date.now();
+    session.lastActivityTime = Date.now();
     session.isInRestMessage = false;
     yield sendExercise(ctx, session);
 }));
@@ -54,6 +56,7 @@ bot.callbackQuery("next_exercise", (ctx) => __awaiter(void 0, void 0, void 0, fu
     const session = userSessions[userId];
     if (!session)
         return;
+    session.lastActivityTime = Date.now();
     const currentExercise = exercises_1.exercises[session.exerciseIndex];
     if (currentExercise.hasRest && session.isInRestMessage) {
         yield handleRestPeriod(ctx, session);
@@ -78,6 +81,7 @@ bot.callbackQuery("next_exercise", (ctx) => __awaiter(void 0, void 0, void 0, fu
 function sendExercise(ctx, session) {
     return __awaiter(this, void 0, void 0, function* () {
         const exercise = exercises_1.exercises[session.exerciseIndex];
+        session.lastActivityTime = Date.now();
         let caption = `${exercise.name}`;
         if (exercise.description) {
             caption += `\n\n${exercise.description}`;
@@ -137,13 +141,37 @@ function handleRestPeriod(ctx, session) {
 function endSession(ctx, session) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b;
-        const elapsedTime = ((Date.now() - session.startTime) / 1000 / 60).toFixed(2); // mins
-        yield ctx.reply(`Training session completed!\n\nTotal time: ${elapsedTime} seconds`, {
+        const elapsedTime = ((Date.now() - session.startTime) / 1000 / 60).toFixed(2);
+        yield ctx.reply(`Training session completed!\n\nTotal time: ${elapsedTime} minutes`, {
             reply_markup: { remove_keyboard: true }
         });
         delete userSessions[((_b = (_a = ctx.from) === null || _a === void 0 ? void 0 : _a.id) === null || _b === void 0 ? void 0 : _b.toString()) || ""];
     });
 }
+// Check for inactive sessions every minute
+setInterval(() => __awaiter(void 0, void 0, void 0, function* () {
+    const now = Date.now();
+    const INACTIVITY_TIMEOUT = 2 * 60 * 60 * 1000; // 2 hours
+    for (const userId in userSessions) {
+        const session = userSessions[userId];
+        if (now - session.lastActivityTime > INACTIVITY_TIMEOUT) {
+            // Send termination message
+            try {
+                yield bot.api.sendMessage(userId, "⚠️ Your training session has ended due to inactivity.");
+            }
+            catch (error) {
+                console.error("Failed to send session end message:", error);
+            }
+            // Clear any active timers
+            if (session.restTimer) {
+                clearTimeout(session.restTimer);
+                delete session.restTimer;
+            }
+            // Delete the session
+            delete userSessions[userId];
+        }
+    }
+}), 60 * 1000 * 10); // Check every 10 minutes
 // Start the bot
 bot.start();
 console.log("Bot started!");

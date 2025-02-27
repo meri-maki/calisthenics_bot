@@ -8,6 +8,7 @@ const bot = new Bot(process.env.BOT_TOKEN!)
 interface SessionData {
     exerciseIndex: number
     startTime: number
+    lastActivityTime: number // Track last user interaction
     restTimer?: NodeJS.Timeout
     isInRestMessage: boolean
 }
@@ -21,6 +22,7 @@ bot.command("start", async (ctx) => {
         userSessions[userId] = {
             exerciseIndex: 0,
             startTime: Date.now(),
+            lastActivityTime: Date.now(),
             isInRestMessage: false
         }
     }
@@ -47,6 +49,7 @@ bot.callbackQuery("start_session", async (ctx) => {
 
     session.exerciseIndex = 0
     session.startTime = Date.now()
+    session.lastActivityTime = Date.now()
     session.isInRestMessage = false
 
     await sendExercise(ctx, session)
@@ -57,7 +60,7 @@ bot.callbackQuery("next_exercise", async (ctx) => {
     const session = userSessions[userId]
 
     if (!session) return
-
+    session.lastActivityTime = Date.now()
     const currentExercise = exercises[session.exerciseIndex]
 
     if (currentExercise.hasRest && session.isInRestMessage) {
@@ -85,7 +88,7 @@ bot.callbackQuery("next_exercise", async (ctx) => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function sendExercise(ctx: any, session: SessionData) {
     const exercise = exercises[session.exerciseIndex]
-
+    session.lastActivityTime = Date.now()
     let caption = `${exercise.name}`
     if (exercise.description) {
         caption += `\n\n${exercise.description}`
@@ -149,14 +152,42 @@ async function handleRestPeriod(ctx: any, session: SessionData) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function endSession(ctx: any, session: SessionData) {
-    const elapsedTime = ((Date.now() - session.startTime) / 1000 / 60).toFixed(2) // mins
-
-    await ctx.reply(`Training session completed!\n\nTotal time: ${elapsedTime} seconds`, {
+    const elapsedTime = ((Date.now() - session.startTime) / 1000 / 60).toFixed(2)
+    await ctx.reply(`Training session completed!\n\nTotal time: ${elapsedTime} minutes`, {
         reply_markup: { remove_keyboard: true }
     })
-
     delete userSessions[ctx.from?.id?.toString() || ""]
 }
+
+// Check for inactive sessions every minute
+setInterval(
+    async () => {
+        const now = Date.now()
+        const INACTIVITY_TIMEOUT = 2 * 60 * 60 * 1000 // 2 hours
+
+        for (const userId in userSessions) {
+            const session = userSessions[userId]
+            if (now - session.lastActivityTime > INACTIVITY_TIMEOUT) {
+                // Send termination message
+                try {
+                    await bot.api.sendMessage(userId, "⚠️ Your training session has ended due to inactivity.")
+                } catch (error) {
+                    console.error("Failed to send session end message:", error)
+                }
+
+                // Clear any active timers
+                if (session.restTimer) {
+                    clearTimeout(session.restTimer)
+                    delete session.restTimer
+                }
+
+                // Delete the session
+                delete userSessions[userId]
+            }
+        }
+    },
+    60 * 1000 * 10
+) // Check every 10 minutes
 
 // Start the bot
 bot.start()
