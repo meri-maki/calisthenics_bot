@@ -40,12 +40,14 @@ bot.command("start", async (ctx: Context) => {
 // Handle /reset command
 bot.command("reset", async (ctx: Context) => {
     const userId = ctx.from?.id?.toString() || ""
-    delete userSessions[userId]
     const msg = await ctx.replyWithAnimation(
         "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExajYxcWw0d29ramhzYXQ3aG5yYWJqengxcDA2dTEzdGg2aHpzdzUyMSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/zDpYQooxkwXkAWMxRK/giphy.gif?0",
         { caption: "See you next time!" }
     )
     trackMessage(userId, msg.message_id)
+    const session = userSessions[userId]
+    await deleteTrackedMessages(ctx, session, msg.message_id)
+    delete userSessions[userId]
 })
 
 // Handle "Start Session" button
@@ -245,7 +247,7 @@ function shuffleArray(array: Exercises) {
 // Function to end the session
 async function endSession(ctx: Context, session: SessionData) {
     const elapsedTime = ((Date.now() - session.startTime) / 1000 / 60).toFixed(2)
-const exerciseList = session.extraExercises ?? exercises
+    const exerciseList = session.extraExercises ?? exercises
     // Send the session-end message
     const endMsg = await ctx.replyWithAnimation(
         "https://media.giphy.com/media/yYjG2XfoY36L9Sauri/giphy.gif?cid=ecf05e47tibcqfm6ka7gyzncdbm3csks5yy723pk2z0amkzv&ep=v1_gifs_search&rid=giphy.gif&ct=g",

@@ -13,7 +13,8 @@ export const exercises: Exercises = [
     {
         name: "Squat Sky Reaches",
         imgUrl: "https://ibb.co/G41cgCBx?random=64",
-        animationUrl: "https://assets.myworkouts.io/exercises-media/2CRgjWyqSjY93ZFAp/squat_reach_male_v25_gif_capoff.gif",
+        animationUrl:
+            "https://assets.myworkouts.io/exercises-media/2CRgjWyqSjY93ZFAp/squat_reach_male_v25_gif_capoff.gif",
         repsMin: 5,
         repsMax: 10,
         hasRest: false
@@ -27,7 +28,8 @@ export const exercises: Exercises = [
     },
     {
         name: "Dead Bugs",
-        animationUrl: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ3d4MDA3ZXU1a3MwbzR3dHNlNWtua3FqaXUyOGM5M2E4ZTloeTh6diZlcD12MV9naWZzX3NlYXJjaCZjdD1n/oZEotiuNNWN8YjDsEO/giphy.gif",
+        animationUrl:
+            "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ3d4MDA3ZXU1a3MwbzR3dHNlNWtua3FqaXUyOGM5M2E4ZTloeTh6diZlcD12MV9naWZzX3NlYXJjaCZjdD1n/oZEotiuNNWN8YjDsEO/giphy.gif",
         videoUrl: "http://www.nick-e.com/deadbug/",
         imgUrl: "https://ibb.co/nMJ4tLvt?random=64",
         repsMin: 10,
