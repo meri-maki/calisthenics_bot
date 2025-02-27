@@ -4,34 +4,37 @@ export const exercises: Exercises = [
     {
         name: "Yuri's Shoulder Band Warmup",
         description: "Start with a gentle stretch to prepare your shoulders.",
-        videoUrl: "https://www.youtube.com/watch?v=Vwn5hSf3WEg",
+        videoUrl: "https://www.youtube.com/watch?v=Vwn5hSf3WEg&ab_channel=YuriMarmerstein",
+        imgUrl: "https://ibb.co/9kbMfrPm?random=64",
         repsMin: 5,
         repsMax: 10,
         hasRest: false
     },
     {
         name: "Squat Sky Reaches",
-        videoUrl: "https://www.youtube.com/watch?v=Vwn5hSf3WEg",
+        imgUrl: "https://ibb.co/G41cgCBx?random=64",
         repsMin: 5,
         repsMax: 10,
         hasRest: false
     },
     {
         name: "Hips Mobility",
+        imgUrl: "https://ibb.co/Mxbqgc8W?random=64",
         repsMin: 10,
         repsMax: 30,
         hasRest: false
     },
     {
         name: "Dead Bugs",
-        description: "Reps are in seconds!",
         videoUrl: "http://www.nick-e.com/deadbug/",
+        imgUrl: "https://ibb.co/nMJ4tLvt?random=64",
         repsMin: 10,
         repsMax: 30,
         hasRest: false
     },
     {
         name: "SUPERSET: Pull-ups + Squats",
+        description: "Pull-up with THUMB OVER BAR  /  Squat leaning over knees",
         hasRest: true,
         repsMin: 5,
         repsMax: 8
