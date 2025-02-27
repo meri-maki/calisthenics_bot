@@ -1,7 +1,7 @@
 {
     "scripts": {
         "build": "npx tsc",
-        "start-dev": "node dist/bot.js",
+        "start-dev": "npx tsc && node dist/bot.js",
         "prettier": "npx prettier . --write"
     },
     "devDependencies": {
